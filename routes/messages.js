@@ -13,7 +13,7 @@ router.post('/messages', (req, res, next) => {
     const message = new Message({
         _id: new mongoose.Types.ObjectId(),
         message: req.body.message,
-        author: req.user._id
+        author: req.user.id
     });
     message
         .save()
