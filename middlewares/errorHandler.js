@@ -14,7 +14,7 @@ function _handler(err, defaultMsg = _defaultMsg, overwriteAssoc = {}) {
     Object.assign(associations, overwriteAssoc);
 
     if (!err || !err.message) return defaultMsg;
-    console.log('Error', err);
+    console.log('Error: ', err.message);
     const message = err.message;
     for (key in associations) {
         if (message.includes(key)) {

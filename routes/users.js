@@ -33,7 +33,6 @@ router.post('/signup', (req, res) => {
 });
 
 router.post('/login', (req, res) => {
-    console.log(req.body);
     if (!req.body.email) {
         return res.status(401).json({ error: 'Email is required' });
     }
