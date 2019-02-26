@@ -2,17 +2,20 @@ const app = require('express')();
 const bodyParser = require('body-parser');
 const config = require('./config');
 const jwt = require('jsonwebtoken');
+const cors = require('cors');
 
 const mongoose = require('mongoose');
 
 mongoose.connect(config.mongoURI);
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(function(req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
     next();
 });
 
