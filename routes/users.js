@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const errorHandler = require('../middlewares/errorHandler.js');
+const errorHandler = require('../utils/errorHandler.js');
 
 const User = require('../models/user');
 

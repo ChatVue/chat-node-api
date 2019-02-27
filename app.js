@@ -1,8 +1,8 @@
 const app = require('express')();
 const bodyParser = require('body-parser');
 const config = require('./config');
-const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const parseBearer = require('./utils/token');
 
 const mongoose = require('mongoose');
 
@@ -23,9 +23,7 @@ app.use((req, res, next) => {
     const openPathes = [ '/login', '/signup' ];
     if (!openPathes.includes(req.path)) {
         try {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, config.tokenKey);
-            req.user = decoded;
+            req.user = parseBearer(req.headers.authorization);
         } catch (err) {
             return res.status(401).json({ result: 'Access Denied' });
         }
@@ -42,6 +40,8 @@ app.use((err, req, res, next) => {
     res.json({ error: err.message });
 });
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
     console.log(`Server is running on PORT ${config.port}`);
 });
+
+app.io = require('./routes/socket').run(server);

@@ -9,18 +9,4 @@ router.get('/messages', (req, res) => {
     });
 });
 
-router.post('/messages', (req, res, next) => {
-    const message = new Message({
-        _id: new mongoose.Types.ObjectId(),
-        message: req.body.message,
-        author: req.user.id
-    });
-    message
-        .save()
-        .then((result) => {
-            return res.status(201).json({ id: result._id });
-        })
-        .catch();
-});
-
 module.exports = router;
