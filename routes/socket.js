@@ -6,7 +6,13 @@ function run(server) {
     const io = require('socket.io')(server);
     io.on('connection', (client) => {
         client.on('NEW', (bearer, msg, tmpId) => {
-            const userData = parseBearer(bearer);
+            let userData = {};
+            try {
+                userData = parseBearer(bearer);
+            } catch (err) {
+                client.emit('LOGOUT');
+                return;
+            }
             const message = new Message({
                 _id: new mongoose.Types.ObjectId(),
                 message: msg,
