@@ -22,11 +22,23 @@ function run(server) {
                 .save()
                 .then((result) => {
                     Message.findOne({ _id: result._id }).populate('author', 'nick').exec(function(err, message) {
+                        // TODO: Broadcast only for logged in users
                         client.broadcast.emit('ADD', message);
                         client.emit('UPDATE', { message, tmpId });
                     });
                 })
                 .catch();
+        });
+        client.on('TYPING', (bearer) => {
+            let userData = {};
+            try {
+                userData = parseBearer(bearer, client.request.headers);
+            } catch (err) {
+                client.emit('LOGOUT');
+                return;
+            }
+            // TODO: Broadcast only for logged in users
+            client.broadcast.emit('TYPING', userData.nick);
         });
     });
     return io;
