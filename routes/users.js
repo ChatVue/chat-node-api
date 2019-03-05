@@ -1,9 +1,8 @@
 const router = require('express').Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
 const errorHandler = require('../utils/errorHandler.js');
+const { prepareToken } = require('../utils/token');
 
 const User = require('../models/user');
 
@@ -50,14 +49,12 @@ router.post('/login', (req, res) => {
                 if (err) {
                     return res.status(401).json({ error: errorHandler.login(err) });
                 }
-                const token = jwt.sign(
+                const token = prepareToken(
                     {
                         id: user._id,
-                        nick: user.nick,
-                        email: user.email
+                        nick: user.nick
                     },
-                    config.tokenKey,
-                    { expiresIn: '1h' }
+                    req.headers
                 );
                 return res.json({
                     result: 'Authorized',

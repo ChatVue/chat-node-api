@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Message = require('../models/message');
-const parseBearer = require('../utils/token');
+const { parseBearer } = require('../utils/token');
 
 function run(server) {
     const io = require('socket.io')(server);
@@ -8,7 +8,7 @@ function run(server) {
         client.on('NEW', (bearer, msg, tmpId) => {
             let userData = {};
             try {
-                userData = parseBearer(bearer);
+                userData = parseBearer(bearer, client.request.headers);
             } catch (err) {
                 client.emit('LOGOUT');
                 return;
