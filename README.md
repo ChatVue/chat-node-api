@@ -8,6 +8,7 @@ Chat backend (API) on Node.js. Frontend side see [chat-vue-app](https://github.c
 <img width="270" src="/readme/Screenshot_2.png?raw=true" align="left">
 <img width="270" src="/readme/Screenshot_3.png?raw=true">
 <img width="270" src="/readme/Screenshot_4.png?raw=true" align="left">
+<img width="270" src="/readme/Screenshot_6.png?raw=true" align="left">
 <img width="270" src="/readme/Screenshot_5.png?raw=true">
 
 ## Project setup
