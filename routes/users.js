@@ -2,9 +2,33 @@ const router = require('express').Router();
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const errorHandler = require('../utils/errorHandler.js');
-const { prepareToken } = require('../utils/token');
+const { decodeToken, prepareToken, prepareRefreshToken } = require('../utils/token');
+const config = require('../config');
 
 const User = require('../models/user');
+
+function getAndSaveNewRefreshToken(user, headers) {
+    const refreshToken = prepareRefreshToken(user, headers);
+
+    if (!user.refreshTokens || user.refreshTokens.length >= config.loginCountLimit) {
+        user.refreshTokens = [];
+    }
+    user.refreshTokens.push(refreshToken);
+    user.save();
+
+    return refreshToken;
+}
+
+function getAndRenewRefreshToken(user, headers, prevRefreshToken) {
+    const refreshToken = prepareRefreshToken(user, headers);
+
+    const i = user.refreshTokens.findIndex((v) => v === prevRefreshToken);
+    if (i === -1) throw Error(errorHandler.login());
+    user.refreshTokens.set(i, refreshToken);
+    user.save();
+
+    return refreshToken;
+}
 
 router.post('/signup', (req, res) => {
     if (!/.{6,}/.test(req.body.password)) {
@@ -38,7 +62,6 @@ router.post('/login', (req, res) => {
     if (!req.body.password) {
         return res.status(401).json({ error: 'Password is required' });
     }
-    // TODO: Check === email
     User.findOne({ email: req.body.email })
         .exec()
         .then((user) => {
@@ -49,22 +72,56 @@ router.post('/login', (req, res) => {
                 if (err) {
                     return res.status(401).json({ error: errorHandler.login(err) });
                 }
-                const token = prepareToken(
-                    {
-                        id: user._id,
-                        nick: user.nick
-                    },
-                    req.headers
-                );
+                const refreshToken = getAndSaveNewRefreshToken(user, req.headers);
                 return res.json({
                     result: 'Authorized',
-                    token
+                    token: prepareToken(user, req.headers),
+                    refreshToken
                 });
             });
         })
         .catch((err) => {
             return res.status(401).json({ error: errorHandler.login(err) });
         });
+});
+
+router.post('/refresh', (req, res) => {
+    try {
+        if (!req.body.refreshToken) throw errorHandler.login();
+        let decodedToken;
+        decodedToken = decodeToken(req.body.refreshToken, req.headers);
+        return User.findOne({ _id: decodedToken.id }).exec().then((user) => {
+            if (!user.refreshTokens.includes(req.body.refreshToken)) {
+                return res.status(401).json({ error: errorHandler.login() });
+            }
+            const refreshToken = getAndRenewRefreshToken(user, req.headers, req.body.refreshToken);
+
+            return res.json({
+                result: 'Refreshed',
+                token: prepareToken(user, req.headers),
+                refreshToken
+            });
+        });
+    } catch (err) {}
+    return res.status(401).json({ error: errorHandler.login() });
+});
+
+router.post('/logout', (req, res) => {
+    try {
+        if (!req.body.refreshToken) throw errorHandler.login();
+        let decodedToken = decodeToken(req.body.refreshToken, req.headers);
+        return User.findOne({ _id: decodedToken.id }).exec().then((user) => {
+            if (!user.refreshTokens.includes(req.body.refreshToken)) {
+                return res.status(401).json({ error: errorHandler.login() });
+            }
+            user.refreshTokens.pull(req.body.refreshToken);
+            user.save();
+            return res.json({
+                result: 'Logged out'
+            });
+        });
+    } catch (err) {}
+    return res.status(401).json({ error: errorHandler.login() });
 });
 
 module.exports = router;
